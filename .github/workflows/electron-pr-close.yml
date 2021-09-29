@@ -1,0 +1,51 @@
+
+name: "Electron: Delete PR image"
+on:
+  pull_request:
+    types:
+      - closed
+    paths:
+      - 'electron/**'
+      - '.github/workflows/electron.yml'
+      - '.github/workflows/electron-pr-close.yml'
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/github-script@v5
+        id: delete-image
+        with:
+          script: |
+            const util = require('util');
+            const exec = util.promisify(require('child_process').exec);
+
+            const digests = 
+                await exec("docker manifest inspect ghcr.io/soloai/vscode-dev-containers-electron:pr-" + context.issue.number).then(({stdout})=> {
+                    const manifest = JSON.parse(stdout);
+
+                    return manifest.manifests.map((el)=> el.digest)
+                })
+
+            const versions = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+                package_type: "container",
+                package_name: "vscode-dev-containers-electron",
+                org: "soloai",
+                state: "active",
+                page: 1,
+                per_page: 100
+            });
+
+            const found = versions.data.filter((version)=> {
+                return version.metadata.container.tags.includes("pr-" + context.issue.number) || digests.includes(version.name)
+            });
+
+            await Promise.all(found.map((version)=> { 
+                return octokit.rest.packages.deletePackageVersionForOrg({
+                    package_type: "container",
+                    package_name: "vscode-dev-containers-electron",
+                    org: "soloai",
+                    package_version_id: version.id
+                });
+            }));

@@ -6,11 +6,13 @@ on:
     paths:
       - 'electron/**'
       - '.github/workflows/electron.yml'
+      - '.github/workflows/electron-pr-close.yml'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - 'electron/**'
       - '.github/workflows/electron.yml'
+      - '.github/workflows/electron-pr-close.yml'
 
 jobs:
   build:
