@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 name: "Electron: Build & Push"
 on:
   push:
@@ -6,11 +7,13 @@ on:
     paths:
       - 'electron/**'
       - '.github/workflows/electron.yml'
+      - '.github/workflows/electron-pr-close.yml'
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize]
     paths:
       - 'electron/**'
       - '.github/workflows/electron.yml'
+      - '.github/workflows/electron-pr-close.yml'
 
 jobs:
   build:
